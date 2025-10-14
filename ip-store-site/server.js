@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import basicAuth from 'express-basic-auth';
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
 import fetch from 'node-fetch';
 
 const app = express();
