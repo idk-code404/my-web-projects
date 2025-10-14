@@ -6,6 +6,8 @@ import rateLimit from 'express-rate-limit';
 import basicAuth from 'express-basic-auth';
 import sqlite3 from 'sqlite3';
 import fetch from 'node-fetch';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 
@@ -17,6 +19,11 @@ app.use(rateLimit({ windowMs: 60 * 1000, max: 100 }));
 
 // Tell Express it's behind a proxy (Render, Nginx, etc.)
 app.set('trust proxy', true);
+
+// Serve static files from 'public' folder
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize SQLite
 const db = new sqlite3.Database('./ip_store.db', (err) => {
@@ -49,7 +56,7 @@ app.post('/api/log', async (req, res) => {
     // Detect visitor IP
     const forwarded = req.headers['x-forwarded-for'];
     const ip = (forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress)?.replace('::ffff:', '') || 'Unknown';
-    const path = req.body.path || '/';
+    const pathLogged = req.body.path || '/';
 
     // 🌍 GeoIP Lookup (using ipapi.co)
     let country = 'Unknown', region = 'Unknown', city = 'Unknown';
@@ -68,13 +75,13 @@ app.post('/api/log', async (req, res) => {
     // Insert log into database
     db.run(
       'INSERT INTO logs (ip, country, region, city, path) VALUES (?, ?, ?, ?, ?)',
-      [ip, country, region, city, path],
+      [ip, country, region, city, pathLogged],
       function (err) {
         if (err) {
           console.error('Logging failed:', err);
           res.status(500).json({ success: false });
         } else {
-          console.log(`✅ Logged: ${ip} | ${city}, ${region}, ${country} | ${path}`);
+          console.log(`✅ Logged: ${ip} | ${city}, ${region}, ${country} | ${pathLogged}`);
           res.status(200).json({ success: true });
         }
       }
@@ -145,6 +152,12 @@ if (adminUser && adminPass) {
 } else {
   console.warn('⚠️ Admin credentials not set. /admin route is disabled.');
 }
+
+// Optional: SPA fallback for client-side routing (if needed)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/admin')) return next();
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Start server
 app.listen(process.env.PORT || 10000, () =>
