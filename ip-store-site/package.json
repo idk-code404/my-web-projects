@@ -14,3 +14,21 @@
     "better-sqlite3": "^8.0.0"
   }
 }
+{
+  "name": "ip-store-site",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",     ← ✅ Add this line
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "helmet": "^7.0.0",
+    "cookie-parser": "^1.4.6",
+    "express-rate-limit": "^7.1.0",
+    "express-basic-auth": "^1.2.1",
+    "sqlite3": "^5.1.7",
+    "node-fetch": "^3.3.2"
+  }
+}
