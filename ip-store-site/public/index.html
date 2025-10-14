@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IP Store — Demo</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>IP Store — Testing Site</h1>
+    <p class="tagline">This site records a masked IP address for testing. Read our policy and choose whether to consent to full logging.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Your (masked) IP</h2>
+      <p id="ip">Fetching…</p>
+      <button id="refresh">Refresh IP</button>
+    </section>
+
+    <section class="card">
+      <h2>Consent</h2>
+      <p>We store a masked IP automatically. If you <strong>agree</strong>, we will also store your full IP for this demo (server-side protected).</p>
+      <div class="consent-actions">
+        <button id="consent-btn" class="primary">I consent — enable full logging</button>
+      </div>
+      <p class="note small">You can withdraw consent by clearing cookies in your browser.</p>
+    </section>
+
+    <section class="card">
+      <h2>Privacy & GDPR</h2>
+      <p>This is a test/demo site. IPs are masked by default; stored logs are kept locally. If used publicly, obtain explicit consent and provide log deletion and data access mechanisms to comply with GDPR.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p><a href="/admin" target="_blank">Admin viewer (protected)</a></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
