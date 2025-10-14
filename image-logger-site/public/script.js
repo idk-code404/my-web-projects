@@ -13,3 +13,12 @@ window.onclick = (e) => {
         document.getElementById('privacy-modal').style.display = 'none';
     }
 };
+// script.js (Frontend)
+window.addEventListener('load', () => {
+  // Automatically log visitor
+  fetch('https://YOUR-BACKEND-NAME.onrender.com/api/log', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path: window.location.pathname }),
+  }).catch((err) => console.warn('IP log failed:', err));
+});
