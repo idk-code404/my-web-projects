@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Admin — IP Logs</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:20px;background:#f6f8fa}
+    table{border-collapse:collapse;width:100%;background:white;border-radius:6px;overflow:hidden}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:13px}
+    th{background:#f4f6f8}
+    .meta{margin:12px 0;color:#666}
+    .toolbar{margin-bottom:12px}
+  </style>
+</head>
+<body>
+  <h1>Admin — IP Logs</h1>
+  <div class="meta">Protected with HTTP Basic Auth. Use your admin credentials to view logs.</div>
+  <div class="toolbar">
+    <label>Per page: <input id="per" value="50" style="width:60px" /></label>
+    <button id="load">Load</button>
+    <span id="status"></span>
+  </div>
+  <table id="tbl">
+    <thead><tr><th>ID</th><th>When</th><th>IP Masked</th><th>IP Raw</th><th>UA</th><th>Path</th><th>Consent</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function load() {
+      document.getElementById('status').textContent = 'Loading…';
+      const per = parseInt(document.getElementById('per').value) || 50;
+      try {
+        const r = await fetch(`/admin/logs?limit=${per}`);
+        if (!r.ok) {
+          document.getElementById('status').textContent = 'Error: ' + r.status;
+          return;
+        }
+        const json = await r.json();
+        const tbody = document.querySelector('#tbl tbody');
+        tbody.innerHTML = '';
+        json.logs.forEach(row=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${row.id}</td>
+                          <td>${row.timestamp}</td>
+                          <td>${row.ip_masked}</td>
+                          <td>${row.ip_raw || ''}</td>
+                          <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis">${row.user_agent||''}</td>
+                          <td>${row.path||''}</td>
+                          <td>${row.consent_flag ? 'yes' : 'no'}</td>`;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('status').textContent = `Showing ${json.logs.length} of ${json.total}`;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('status').textContent = 'Network error';
+      }
+    }
+    document.getElementById('load').addEventListener('click', load);
+    load();
+  </script>
+</body>
+</html>
