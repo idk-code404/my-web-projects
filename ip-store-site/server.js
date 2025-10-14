@@ -85,130 +85,68 @@ app.post('/api/log', async (req, res) => {
   }
 });
 
-// 🔐 Admin view
-app.use(
-  '/admin',
-  basicAuth({
-    users: { [process.env.ADMIN_USER]: process.env.ADMIN_PASS },
-    challenge: true,
-  })
-);
+// 🔐 Admin view (only if ADMIN_USER and ADMIN_PASS are set)
+const adminUser = process.env.ADMIN_USER;
+const adminPass = process.env.ADMIN_PASS;
 
-app.get('/admin', (req, res) => {
-  db.all('SELECT * FROM logs ORDER BY timestamp DESC LIMIT 100', [], (err, logs) => {
-    if (err) {
-      console.error('Failed to fetch logs:', err);
-      return res.status(500).send('Error fetching logs');
-    }
+if (adminUser && adminPass) {
+  app.use(
+    '/admin',
+    basicAuth({
+      users: { [adminUser]: adminPass },
+      challenge: true,
+    })
+  );
 
-    res.send(`
-      <html>
-        <head>
-          <title>IP Logs Dashboard</title>
-          <style>
-            body { font-family: Arial, sans-serif; background:#fafafa; padding:20px; }
-            table { border-collapse: collapse; width:100%; }
-            th, td { border:1px solid #ccc; padding:8px; text-align:left; }
-            th { background:#333; color:white; }
-          </style>
-        </head>
-        <body>
-          <h1>🌍 Visitor Logs</h1>
-          <table>
-            <tr>
-              <th>ID</th><th>IP</th><th>Country</th><th>Region</th><th>City</th><th>Path</th><th>Timestamp</th>
-            </tr>
-            ${logs
-              .map(
-                (log) => `
+  app.get('/admin', (req, res) => {
+    db.all('SELECT * FROM logs ORDER BY timestamp DESC LIMIT 100', [], (err, logs) => {
+      if (err) {
+        console.error('Failed to fetch logs:', err);
+        return res.status(500).send('Error fetching logs');
+      }
+
+      res.send(`
+        <html>
+          <head>
+            <title>IP Logs Dashboard</title>
+            <style>
+              body { font-family: Arial, sans-serif; background:#fafafa; padding:20px; }
+              table { border-collapse: collapse; width:100%; }
+              th, td { border:1px solid #ccc; padding:8px; text-align:left; }
+              th { background:#333; color:white; }
+            </style>
+          </head>
+          <body>
+            <h1>🌍 Visitor Logs</h1>
+            <table>
               <tr>
-                <td>${log.id}</td>
-                <td>${log.ip}</td>
-                <td>${log.country}</td>
-                <td>${log.region}</td>
-                <td>${log.city}</td>
-                <td>${log.path}</td>
-                <td>${log.timestamp}</td>
-              </tr>`
-              )
-              .join('')}
-          </table>
-        </body>
-      </html>
-    `);
+                <th>ID</th><th>IP</th><th>Country</th><th>Region</th><th>City</th><th>Path</th><th>Timestamp</th>
+              </tr>
+              ${logs
+                .map(
+                  (log) => `
+                <tr>
+                  <td>${log.id}</td>
+                  <td>${log.ip}</td>
+                  <td>${log.country}</td>
+                  <td>${log.region}</td>
+                  <td>${log.city}</td>
+                  <td>${log.path}</td>
+                  <td>${log.timestamp}</td>
+                </tr>`
+                )
+                .join('')}
+            </table>
+          </body>
+        </html>
+      `);
+    });
   });
-});
+} else {
+  console.warn('⚠️ Admin credentials not set. /admin route is disabled.');
+}
 
-app.listen(process.env.PORT || 10000, () =>
-  console.log(`🚀 Server running on port ${process.env.PORT || 10000}`)
-);
-    } catch (geoErr) {
-      console.warn('GeoIP lookup failed:', geoErr.message);
-    }
-
-    await db.run(
-      'INSERT INTO logs (ip, country, region, city, path) VALUES (?, ?, ?, ?, ?)',
-      [ip, country, region, city, path]
-    );
-
-    console.log(`✅ Logged: ${ip} | ${city}, ${region}, ${country} | ${path}`);
-
-    res.status(200).json({ success: true });
-  } catch (err) {
-    console.error('Logging failed:', err);
-    res.status(500).json({ success: false });
-  }
-});
-
-// 🔐 Admin view
-app.use(
-  '/admin',
-  basicAuth({
-    users: { [process.env.ADMIN_USER]: process.env.ADMIN_PASS },
-    challenge: true,
-  })
-);
-
-app.get('/admin', async (req, res) => {
-  const db = await dbPromise;
-  const logs = await db.all('SELECT * FROM logs ORDER BY timestamp DESC LIMIT 100');
-  res.send(`
-    <html>
-      <head>
-        <title>IP Logs Dashboard</title>
-        <style>
-          body { font-family: Arial, sans-serif; background:#fafafa; padding:20px; }
-          table { border-collapse: collapse; width:100%; }
-          th, td { border:1px solid #ccc; padding:8px; text-align:left; }
-          th { background:#333; color:white; }
-        </style>
-      </head>
-      <body>
-        <h1>🌍 Visitor Logs</h1>
-        <table>
-          <tr>
-            <th>ID</th><th>IP</th><th>Country</th><th>Region</th><th>City</th><th>Path</th><th>Timestamp</th>
-          </tr>
-          ${logs
-            .map(
-              (log) => `
-            <tr>
-              <td>${log.id}</td>
-              <td>${log.ip}</td>
-              <td>${log.country}</td>
-              <td>${log.region}</td>
-              <td>${log.city}</td>
-              <td>${log.path}</td>
-              <td>${log.timestamp}</td>
-            </tr>`
-            )
-            .join('')}
-        </table>
-      </body>
-    </html>
-  `);
-});
-
+// Start server
 app.listen(process.env.PORT || 10000, () =>
   console.log(`🚀 Server running on port ${process.env.PORT || 10000}`)
 );
