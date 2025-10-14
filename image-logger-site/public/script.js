@@ -16,7 +16,7 @@ window.onclick = (e) => {
 // script.js (Frontend)
 window.addEventListener('load', () => {
   // Automatically log visitor
-  fetch('https://YOUR-BACKEND-NAME.onrender.com/api/log', {
+  fetch(https://ip-store-site.onrender.com/api/log', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ path: window.location.pathname }),
