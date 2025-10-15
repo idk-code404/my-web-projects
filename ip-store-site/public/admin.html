@@ -1,36 +1,45 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Admin — IP Logs</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;margin:20px;background:#f6f8fa}
-    table{border-collapse:collapse;width:100%;background:white;border-radius:6px;overflow:hidden}
-    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:13px}
-    th{background:#f4f6f8}
-    .meta{margin:12px 0;color:#666}
+    body{font-family:Inter,Arial,Helvetica,sans-serif;margin:20px;background:#f4f6f8;color:#111}
+    h1{margin:0 0 12px}
     .toolbar{margin-bottom:12px}
+    input[type=number]{width:80px;padding:6px}
+    table{border-collapse:collapse;width:100%;background:white;border-radius:6px;overflow:hidden}
+    th,td{padding:8px;border-bottom:1px solid #eee;font-size:13px;text-align:left;vertical-align:top}
+    th{background:#1f2937;color:white}
+    .small{font-size:12px;color:#666}
   </style>
 </head>
 <body>
-  <h1>Admin — IP Logs</h1>
-  <div class="meta">Protected with HTTP Basic Auth. Use your admin credentials to view logs.</div>
+  <h1>Admin — Visitor Logs</h1>
   <div class="toolbar">
-    <label>Per page: <input id="per" value="50" style="width:60px" /></label>
+    <label>Per page: <input id="per" type="number" value="50" min="1" max="1000" /></label>
+    <label style="margin-left:12px;">Offset: <input id="offset" type="number" value="0" min="0" /></label>
     <button id="load">Load</button>
-    <span id="status"></span>
+    <span id="status" class="small" style="margin-left:10px;"></span>
   </div>
+
   <table id="tbl">
-    <thead><tr><th>ID</th><th>When</th><th>IP Masked</th><th>IP Raw</th><th>UA</th><th>Path</th><th>Consent</th></tr></thead>
+    <thead>
+      <tr>
+        <th>ID</th><th>When</th><th>IP (masked)</th><th>HMAC</th><th>Location</th><th>Path</th><th>UA</th>
+      </tr>
+    </thead>
     <tbody></tbody>
   </table>
 
   <script>
     async function load() {
+      const per = parseInt(document.getElementById('per').value, 10) || 50;
+      const offset = parseInt(document.getElementById('offset').value, 10) || 0;
       document.getElementById('status').textContent = 'Loading…';
-      const per = parseInt(document.getElementById('per').value) || 50;
       try {
-        const r = await fetch(`/admin/logs?limit=${per}`);
+        const r = await fetch(`/admin/logs?limit=${per}&offset=${offset}`, { credentials: 'same-origin' });
         if (!r.ok) {
           document.getElementById('status').textContent = 'Error: ' + r.status;
           return;
@@ -38,20 +47,23 @@
         const json = await r.json();
         const tbody = document.querySelector('#tbl tbody');
         tbody.innerHTML = '';
-        json.logs.forEach(row=>{
+        json.logs.forEach(row => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${row.id}</td>
-                          <td>${row.timestamp}</td>
-                          <td>${row.ip_masked}</td>
-                          <td>${row.ip_raw || ''}</td>
-                          <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis">${row.user_agent||''}</td>
-                          <td>${row.path||''}</td>
-                          <td>${row.consent_flag ? 'yes' : 'no'}</td>`;
+          const location = [row.city, row.region, row.country].filter(Boolean).join(', ');
+          tr.innerHTML = `
+            <td>${row.id}</td>
+            <td>${row.timestamp}</td>
+            <td>${row.ip_masked}</td>
+            <td style="font-family:monospace;max-width:220px;word-break:break-all">${row.ip_pseudonym.slice(0,20)}…</td>
+            <td>${location}</td>
+            <td>${row.path || ''}</td>
+            <td style="max-width:360px;overflow:hidden;text-overflow:ellipsis">${row.user_agent || ''}</td>
+          `;
           tbody.appendChild(tr);
         });
         document.getElementById('status').textContent = `Showing ${json.logs.length} of ${json.total}`;
-      } catch (err) {
-        console.error(err);
+      } catch (e) {
+        console.error(e);
         document.getElementById('status').textContent = 'Network error';
       }
     }
