@@ -20,7 +20,7 @@ const __dirname = path.dirname(__filename);
 // ---------- Configuration (override via environment) ----------
 const PORT = process.env.PORT || 10000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'adminpass';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'secretpassword';
 const IP_HMAC_KEY = process.env.IP_HMAC_KEY || 'replace_this_with_a_strong_secret';
 const RETENTION_DAYS = parseInt(process.env.RETENTION_DAYS || '30', 10); // delete logs older than this
 const GEOAPI_TIMEOUT_MS = 2500; // geo lookup timeout
